@@ -1,0 +1,108 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // FUNGSI VALIDASI HELPER
+    // ==========================================
+    function isValidDate(dateStr) {
+      return dateStr is string && dateStr.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isValidWa(waStr) {
+      return waStr is string && waStr.matches('^08[0-9]{8,11}$');
+    }
+
+    function isValidEmail(emailStr) {
+      return emailStr is string && emailStr.size() <= 80 && emailStr.matches('.*@.*');
+    }
+
+    // ==========================================
+    // 1. KOLEKSI EVENT
+    // Invariant 1: harga_tiket tidak pernah negatif dan tiket_terjual tidak pernah melebihi kuota
+    // ==========================================
+    match /event/{eventId} {
+      allow read: if true;
+
+      // Validasi Pembuatan Event Baru
+      allow create: if request.resource.data.nama is string
+                    && request.resource.data.nama.size() >= 1 && request.resource.data.nama.size() <= 60
+                    && isValidDate(request.resource.data.tanggal)
+                    && request.resource.data.lokasi is string
+                    && request.resource.data.lokasi.size() >= 1 && request.resource.data.lokasi.size() <= 100
+                    && request.resource.data.harga_tiket is number
+                    && request.resource.data.harga_tiket >= 0
+                    && request.resource.data.kuota is number
+                    && request.resource.data.kuota >= 1 && request.resource.data.kuota <= 500
+                    && request.resource.data.tiket_terjual is number
+                    && request.resource.data.tiket_terjual == 0;
+
+      // Validasi Pembaruan Data Event
+      allow update: if request.resource.data.nama is string
+                    && request.resource.data.nama.size() >= 1 && request.resource.data.nama.size() <= 60
+                    && isValidDate(request.resource.data.tanggal)
+                    && request.resource.data.lokasi is string
+                    && request.resource.data.lokasi.size() >= 1 && request.resource.data.lokasi.size() <= 100
+                    && request.resource.data.harga_tiket is number
+                    && request.resource.data.harga_tiket >= 0
+                    && request.resource.data.kuota is number
+                    && request.resource.data.kuota >= 1 && request.resource.data.kuota <= 500
+                    && request.resource.data.tiket_terjual is number
+                    && request.resource.data.tiket_terjual >= 0
+                    && request.resource.data.tiket_terjual <= request.resource.data.kuota;
+
+      allow delete: if true;
+    }
+
+    // ==========================================
+    // 2. KOLEKSI PEMBELI
+    // ID dokumen = nomor WhatsApp (diawali 08, 10-13 digit)
+    // ==========================================
+    match /pembeli/{noWhatsapp} {
+      allow read: if true;
+
+      allow create: if request.resource.data.nama is string
+                    && request.resource.data.nama.size() >= 1 && request.resource.data.nama.size() <= 60
+                    && request.resource.data.no_whatsapp == noWhatsapp
+                    && isValidWa(request.resource.data.no_whatsapp)
+                    && isValidEmail(request.resource.data.email);
+
+      allow update: if request.resource.data.nama is string
+                    && request.resource.data.nama.size() >= 1 && request.resource.data.nama.size() <= 60
+                    && request.resource.data.no_whatsapp == noWhatsapp
+                    && isValidEmail(request.resource.data.email);
+
+      allow delete: if true;
+    }
+
+    // ==========================================
+    // 3. KOLEKSI TIKET
+    // Invariant 2: jumlah_tiket selalu 1 sampai 5 dan tidak melebihi sisa kuota
+    // Invariant 3: total selalu sama dengan harga_tiket * jumlah_tiket
+    // ==========================================
+    match /tiket/{tiketId} {
+      allow read: if true;
+
+      // Pembuatan tiket baru: status awal wajib 'menunggu_bayar'
+      allow create: if request.resource.data.jumlah_tiket is number
+                    && request.resource.data.jumlah_tiket >= 1 && request.resource.data.jumlah_tiket <= 5
+                    && request.resource.data.harga_tiket is number
+                    && request.resource.data.harga_tiket >= 0
+                    && request.resource.data.total == (request.resource.data.harga_tiket * request.resource.data.jumlah_tiket)
+                    && request.resource.data.status == 'menunggu_bayar';
+
+      // Alur transisi status:
+      // menunggu_bayar -> lunas ATAU dibatalkan
+      // lunas -> hadir
+      // tidak boleh melompat atau mundur
+      allow update: if request.resource.data.total == (request.resource.data.harga_tiket * request.resource.data.jumlah_tiket)
+                    && (
+                      (resource.data.status == 'menunggu_bayar' && (request.resource.data.status == 'lunas' || request.resource.data.status == 'dibatalkan'))
+                      || (resource.data.status == 'lunas' && request.resource.data.status == 'hadir')
+                      || (resource.data.status == request.resource.data.status)
+                    );
+
+      allow delete: if true;
+    }
+  }
+}
