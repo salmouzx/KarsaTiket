@@ -7,7 +7,7 @@ import { PembeliItem } from '@/types/firestore';
 interface PembeliFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (pembeliData: Omit<PembeliItem, 'dibuat_pada'>) => boolean | void;
+  onSave: (pembeliData: Omit<PembeliItem, 'dibuat_pada'>) => Promise<boolean | void> | boolean | void;
   initialData?: PembeliItem | null;
   existingPhones: string[]; // Daftar nomor WA yang sudah terdaftar untuk cek duplikasi
 }
@@ -34,6 +34,7 @@ export const PembeliFormModal: React.FC<PembeliFormModalProps> = ({
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -95,19 +96,24 @@ export const PembeliFormModal: React.FC<PembeliFormModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const success = onSave({
-      id: formData.no_whatsapp.trim(),
-      no_whatsapp: formData.no_whatsapp.trim(),
-      nama: formData.nama.trim(),
-      email: formData.email.trim(),
-    });
+    setIsSubmitting(true);
+    try {
+      const success = await onSave({
+        id: formData.no_whatsapp.trim(),
+        no_whatsapp: formData.no_whatsapp.trim(),
+        nama: formData.nama.trim(),
+        email: formData.email.trim(),
+      });
 
-    if (success !== false) {
-      onClose();
+      if (success !== false) {
+        onClose();
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

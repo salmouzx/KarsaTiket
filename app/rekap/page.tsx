@@ -7,25 +7,61 @@ import { LoadingState } from '@/components/ui/LoadingState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Toast } from '@/components/ui/Toast';
-import { Store } from '@/lib/store';
 import { EventItem, TiketItem } from '@/types/firestore';
+import { EventService, RekapService } from '@/lib/firestore-service';
 
 export default function RekapPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
-  const [tiketList, setTiketList] = useState<TiketItem[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
-  const [viewState, setViewState] = useState<'normal' | 'loading' | 'empty' | 'error'>('normal');
+  const [currentEvent, setCurrentEvent] = useState<EventItem | null>(null);
+  const [eventTiket, setEventTiket] = useState<TiketItem[]>([]);
+  const [viewState, setViewState] = useState<'normal' | 'loading' | 'empty' | 'error'>('loading');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadedEvents = Store.getEvents();
-    const loadedTiket = Store.getTiket();
-    setEvents(loadedEvents);
-    setTiketList(loadedTiket);
-    if (loadedEvents.length > 0) {
-      setSelectedEventId(loadedEvents[0].id);
+  // Ambil daftar event dari Firestore
+  const loadInitialData = async () => {
+    setViewState('loading');
+    try {
+      const fetchedEvents = await EventService.getAll();
+      setEvents(fetchedEvents);
+
+      if (fetchedEvents.length === 0) {
+        setViewState('empty');
+        return;
+      }
+
+      const initialId = selectedEventId || fetchedEvents[0].id;
+      setSelectedEventId(initialId);
+      await loadRekapData(initialId, fetchedEvents);
+    } catch (err: any) {
+      console.error('Error fetching rekap events:', err);
+      setViewState('error');
     }
+  };
+
+  // Ambil data rekapitulasi untuk event tertentu
+  const loadRekapData = async (eventId: string, eventList?: EventItem[]) => {
+    try {
+      const rekap = await RekapService.getRekapForEvent(eventId);
+      const ev = (eventList || events).find((e) => e.id === eventId) || rekap.event;
+      setCurrentEvent(ev || null);
+      setEventTiket(rekap.tiketList);
+      setViewState('normal');
+    } catch (err: any) {
+      console.error('Error fetching rekap detail:', err);
+      setViewState('error');
+    }
+  };
+
+  useEffect(() => {
+    loadInitialData();
   }, []);
+
+  const handleSelectEvent = async (eventId: string) => {
+    setSelectedEventId(eventId);
+    await loadRekapData(eventId);
+    setToastMessage('Data rekapitulasi acara diperbarui dari Firestore');
+  };
 
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -35,44 +71,24 @@ export default function RekapPage() {
     }).format(val);
   };
 
-  const currentEvent = events.find((e) => e.id === selectedEventId) || events[0];
-
-  // Ambil seluruh tiket yang terkait dengan event yang dipilih
-  const eventTiket = useMemo(() => {
-    if (!currentEvent) return [];
-    return tiketList.filter((t) => t.event_id === currentEvent.id);
-  }, [tiketList, currentEvent]);
-
   // Perhitungan Angka Rekapitulasi Sesuai PRD Bagian 5.4:
-  // 1. Tiket Terjual
-  const tiketTerjual = currentEvent ? currentEvent.tiket_terjual : 0;
-  // 2. Sisa Kuota
-  const sisaKuota = currentEvent ? Math.max(0, currentEvent.kuota - currentEvent.tiket_terjual) : 0;
-  // 3. Persentase Keterisian
-  const persentase = currentEvent && currentEvent.kuota > 0
-    ? Math.min(100, Math.round((tiketTerjual / currentEvent.kuota) * 100))
-    : 0;
+  const tiketTerjual = currentEvent ? (currentEvent.tiket_terjual || 0) : 0;
+  const kuota = currentEvent ? (currentEvent.kuota || 0) : 0;
+  const sisaKuota = Math.max(0, kuota - tiketTerjual);
+  const persentase = kuota > 0 ? Math.min(100, Math.round((tiketTerjual / kuota) * 100)) : 0;
 
-  // 4. Pendapatan Sah (Acceptance Criteria 2):
-  // HANYA dari tiket berstatus 'lunas' dan 'hadir'. Status 'menunggu_bayar' dan 'dibatalkan' TIDAK dihitung.
+  // Pendapatan Sah (Acceptance Criteria 2): HANYA dari status 'lunas' dan 'hadir'
   const pendapatanSah = useMemo(() => {
     return eventTiket
       .filter((t) => t.status === 'lunas' || t.status === 'hadir')
-      .reduce((sum, t) => sum + t.total, 0);
+      .reduce((sum, t) => sum + (t.total || 0), 0);
   }, [eventTiket]);
 
-  // 5. Peserta Hadir (Status 'hadir')
+  // Peserta Hadir (Status 'hadir')
   const pesertaHadir = useMemo(() => {
     return eventTiket
       .filter((t) => t.status === 'hadir')
-      .reduce((sum, t) => sum + t.jumlah_tiket, 0);
-  }, [eventTiket]);
-
-  // Status menunggu bayar (potensi pendapatan)
-  const menungguBayar = useMemo(() => {
-    return eventTiket
-      .filter((t) => t.status === 'menunggu_bayar')
-      .reduce((sum, t) => sum + t.total, 0);
+      .reduce((sum, t) => sum + (t.jumlah_tiket || 0), 0);
   }, [eventTiket]);
 
   return (
@@ -84,12 +100,12 @@ export default function RekapPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
               Modul Rekap
             </h1>
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 shadow-2xs">
-              Sumber: event & tiket
+            <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+              Live Firestore: event & tiket
             </span>
           </div>
           <p className="text-sm text-slate-500 mt-1">
-            Ringkasan tiket terjual, sisa kuota, kalkulasi pendapatan sah, dan kehadiran peserta per event.
+            Ringkasan tiket terjual, sisa kuota, kalkulasi pendapatan sah, dan kehadiran peserta per event di Cloud Firestore.
           </p>
         </div>
 
@@ -144,22 +160,19 @@ export default function RekapPage() {
       {viewState === 'error' && (
         <ErrorState
           title="Gagal Memuat Rekap"
-          message="Koneksi terputus saat membaca dan menghitung rekapitulasi data. Silakan coba lagi."
-          onRetry={() => {
-            setViewState('normal');
-            setToastMessage('Berhasil memuat ulang data rekap');
-          }}
+          message="Koneksi terputus saat membaca dan menghitung rekapitulasi data dari Firestore. Silakan coba lagi."
+          onRetry={loadInitialData}
         />
       )}
 
       {viewState === 'empty' && (
         <EmptyState
           icon={<BarChart3 className="w-7 h-7" />}
-          title="Event Belum Memiliki Tiket"
-          description="Belum ada transaksi tiket yang tercatat pada event ini, sehingga rekap pendapatan masih kosong."
-          actionLabel="Buka Menu Tiket"
+          title="Belum Ada Acara untuk Direkap"
+          description="Tambahkan acara baru dan catat penjualan tiket untuk melihat rekapitulasi pendapatan."
+          actionLabel="Tambah Event Baru"
           onAction={() => {
-            setViewState('normal');
+            window.location.href = '/event';
           }}
         />
       )}
@@ -189,15 +202,12 @@ export default function RekapPage() {
               <select
                 id="rekap-select-event"
                 value={selectedEventId}
-                onChange={(e) => {
-                  setSelectedEventId(e.target.value);
-                  setToastMessage('Data rekapitulasi acara diperbarui');
-                }}
+                onChange={(e) => handleSelectEvent(e.target.value)}
                 className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-xs transition-all"
               >
                 {events.map((ev) => (
                   <option key={ev.id} value={ev.id}>
-                    {ev.nama} ({ev.tiket_terjual}/{ev.kuota} kursi)
+                    {ev.nama} ({ev.tiket_terjual || 0}/{ev.kuota} kursi)
                   </option>
                 ))}
               </select>
@@ -210,7 +220,7 @@ export default function RekapPage() {
             <div className="flex justify-between items-center text-sm font-bold">
               <span className="text-slate-800">Kapasitas Kursi Terisi</span>
               <span className="text-indigo-700">
-                {tiketTerjual} / {currentEvent.kuota} Kursi ({persentase}%)
+                {tiketTerjual} / {kuota} Kursi ({persentase}%)
               </span>
             </div>
             <div className="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden p-0.5">
@@ -230,7 +240,7 @@ export default function RekapPage() {
               <span className="font-semibold text-slate-600">
                 {sisaKuota === 0 ? '🔥 Kuota Habis Terjual!' : `Sisa ${sisaKuota} kursi tersedia`}
               </span>
-              <span>Kapasitas {currentEvent.kuota} Kursi</span>
+              <span>Kapasitas {kuota} Kursi</span>
             </div>
           </div>
 
@@ -253,7 +263,7 @@ export default function RekapPage() {
               </div>
               <span className="text-xs text-slate-500 font-semibold">Sisa Kuota</span>
               <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">{sisaKuota}</p>
-              <span className="text-[11px] text-slate-400 block">Dari total {currentEvent.kuota} kuota</span>
+              <span className="text-[11px] text-slate-400 block">Dari total {kuota} kuota</span>
             </div>
 
             {/* Kartu 3: Pendapatan Sah (Lunas & Hadir) */}
@@ -297,8 +307,8 @@ export default function RekapPage() {
             </div>
 
             {eventTiket.length === 0 ? (
-              <p className="text-xs text-slate-400 py-4 text-center">
-                Belum ada transaksi tiket untuk acara ini.
+              <p className="text-xs text-slate-400 py-6 text-center">
+                Belum ada transaksi tiket yang tercatat untuk acara ini di Firestore.
               </p>
             ) : (
               <div className="divide-y divide-slate-100 text-xs">

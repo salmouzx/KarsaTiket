@@ -9,7 +9,7 @@ interface TiketFormModalProps {
   onClose: () => void;
   events: EventItem[];
   pembeliList: PembeliItem[];
-  onSubmit: (params: { eventId: string; pembeliId: string; jumlahTiket: number }) => boolean | void;
+  onSubmit: (params: { eventId: string; pembeliId: string; jumlahTiket: number }) => Promise<boolean | void> | boolean | void;
 }
 
 export const TiketFormModal: React.FC<TiketFormModalProps> = ({
@@ -23,11 +23,12 @@ export const TiketFormModal: React.FC<TiketFormModalProps> = ({
   const [selectedPembeliId, setSelectedPembeliId] = useState<string>('');
   const [jumlahTiket, setJumlahTiket] = useState<number>(1);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       // Pilih event pertama yang masih ada kuotanya
-      const availableEvent = events.find((e) => e.kuota - e.tiket_terjual > 0);
+      const availableEvent = events.find((e) => e.kuota - (e.tiket_terjual || 0) > 0);
       setSelectedEventId(availableEvent ? availableEvent.id : (events[0]?.id || ''));
       setSelectedPembeliId(pembeliList[0]?.id || '');
       setJumlahTiket(1);
@@ -39,7 +40,7 @@ export const TiketFormModal: React.FC<TiketFormModalProps> = ({
 
   const currentEvent = events.find((e) => e.id === selectedEventId);
   const currentPembeli = pembeliList.find((p) => p.id === selectedPembeliId);
-  const sisaKuota = currentEvent ? Math.max(0, currentEvent.kuota - currentEvent.tiket_terjual) : 0;
+  const sisaKuota = currentEvent ? Math.max(0, currentEvent.kuota - (currentEvent.tiket_terjual || 0)) : 0;
   const hargaTiket = currentEvent?.harga_tiket ?? 0;
   const totalHarga = hargaTiket * (jumlahTiket || 0);
 
@@ -51,7 +52,7 @@ export const TiketFormModal: React.FC<TiketFormModalProps> = ({
     }).format(val);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedEventId) {
@@ -71,14 +72,19 @@ export const TiketFormModal: React.FC<TiketFormModalProps> = ({
       return;
     }
 
-    const success = onSubmit({
-      eventId: selectedEventId,
-      pembeliId: selectedPembeliId,
-      jumlahTiket,
-    });
+    setIsSubmitting(true);
+    try {
+      const success = await onSubmit({
+        eventId: selectedEventId,
+        pembeliId: selectedPembeliId,
+        jumlahTiket,
+      });
 
-    if (success !== false) {
-      onClose();
+      if (success !== false) {
+        onClose();
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

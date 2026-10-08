@@ -1,24 +1,24 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Ticket, Plus, CheckCircle, XCircle, UserCheck, Calendar, Clock, AlertCircle, Phone, Tag } from 'lucide-react';
+import { Ticket, Plus, CheckCircle, XCircle, UserCheck, Calendar, Clock, AlertCircle } from 'lucide-react';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Toast } from '@/components/ui/Toast';
 import { TiketFormModal } from '@/components/tiket/TiketFormModal';
-import { TiketItem, TiketStatus, STATUS_LABELS } from '@/types/firestore';
-import { Store } from '@/lib/store';
+import { TiketItem, TiketStatus, STATUS_LABELS, EventItem, PembeliItem } from '@/types/firestore';
+import { TiketService, EventService, PembeliService } from '@/lib/firestore-service';
 
 type FilterTab = 'semua' | TiketStatus;
 
 export default function TiketPage() {
   const [tiketList, setTiketList] = useState<TiketItem[]>([]);
-  const [events, setEvents] = useState(Store.getEvents());
-  const [pembeliList, setPembeliList] = useState(Store.getPembeli());
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [pembeliList, setPembeliList] = useState<PembeliItem[]>([]);
   const [activeTab, setActiveTab] = useState<FilterTab>('semua');
-  const [viewState, setViewState] = useState<'normal' | 'loading' | 'empty' | 'error'>('normal');
+  const [viewState, setViewState] = useState<'normal' | 'loading' | 'empty' | 'error'>('loading');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
 
@@ -26,16 +26,34 @@ export default function TiketPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
 
-  // Muat data dari store saat komponen dibuka
-  useEffect(() => {
-    refreshData();
-  }, []);
+  // Ambil data live dari Cloud Firestore
+  const loadData = async () => {
+    setViewState('loading');
+    try {
+      const [fetchedTiket, fetchedEvents, fetchedPembeli] = await Promise.all([
+        TiketService.getAll(),
+        EventService.getAll(),
+        PembeliService.getAll(),
+      ]);
 
-  const refreshData = () => {
-    setTiketList(Store.getTiket());
-    setEvents(Store.getEvents());
-    setPembeliList(Store.getPembeli());
+      setTiketList(fetchedTiket);
+      setEvents(fetchedEvents);
+      setPembeliList(fetchedPembeli);
+
+      if (fetchedTiket.length === 0) {
+        setViewState('empty');
+      } else {
+        setViewState('normal');
+      }
+    } catch (err: any) {
+      console.error('Error fetching tiket data:', err);
+      setViewState('error');
+    }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -51,42 +69,40 @@ export default function TiketPage() {
     return tiketList.filter((t) => t.status === activeTab);
   }, [tiketList, activeTab]);
 
-  // Handler Buat Tiket Baru
-  const handleCreateTiket = (params: {
+  // Handler Buat Tiket Baru di Firestore
+  const handleCreateTiket = async (params: {
     eventId: string;
     pembeliId: string;
     jumlahTiket: number;
   }) => {
-    const res = Store.createTiket(params);
-    if (!res.success) {
+    try {
+      await TiketService.create(params);
+      setToastType('success');
+      setToastMessage('Tiket berhasil dicatat dan tersimpan ke Cloud Firestore!');
+      setIsModalOpen(false);
+      await loadData();
+    } catch (err: any) {
       setToastType('error');
-      setToastMessage(res.error || 'Gagal membuat tiket');
+      setToastMessage(err.message || 'Gagal membuat tiket');
       return false;
     }
-
-    refreshData();
-    setToastType('success');
-    setToastMessage(`Tiket berhasil dicatat untuk ${res.tiket?.nama_pembeli}`);
-    setIsModalOpen(false);
-    if (viewState === 'empty') setViewState('normal');
   };
 
   // Handler Update Status Tiket Sesuai PRD Bagian 4 & 5
-  const handleUpdateStatus = (id: string, newStatus: TiketStatus) => {
-    const res = Store.updateTiketStatus(id, newStatus);
-    if (!res.success) {
+  const handleUpdateStatus = async (id: string, newStatus: TiketStatus) => {
+    try {
+      await TiketService.updateStatus(id, newStatus);
+      const label = STATUS_LABELS[newStatus]?.label || newStatus;
+      setToastType('success');
+      if (newStatus === 'dibatalkan') {
+        setToastMessage('Tiket dibatalkan dan kuota acara berhasil dikembalikan di Firestore');
+      } else {
+        setToastMessage(`Status tiket berhasil diubah menjadi ${label}`);
+      }
+      await loadData();
+    } catch (err: any) {
       setToastType('error');
-      setToastMessage(res.error || 'Transisi status tidak diizinkan');
-      return;
-    }
-
-    refreshData();
-    const label = STATUS_LABELS[newStatus]?.label || newStatus;
-    setToastType('success');
-    if (newStatus === 'dibatalkan') {
-      setToastMessage('Tiket berhasil dibatalkan dan kuota telah dikembalikan');
-    } else {
-      setToastMessage(`Status tiket berhasil diubah menjadi ${label}`);
+      setToastMessage(err.message || 'Gagal mengubah status tiket');
     }
   };
 
@@ -99,12 +115,12 @@ export default function TiketPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
               Modul Tiket
             </h1>
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 shadow-2xs">
-              Koleksi: tiket
+            <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+              Live Firestore: tiket
             </span>
           </div>
           <p className="text-sm text-slate-500 mt-1">
-            Mencatat pembelian tiket, menghitung total, pelunasan transfer, dan check-in kehadiran.
+            Mencatat pembelian tiket, menghitung total, pelunasan transfer, dan check-in kehadiran di Cloud Firestore.
           </p>
         </div>
 
@@ -192,12 +208,8 @@ export default function TiketPage() {
       {viewState === 'error' && (
         <ErrorState
           title="Gagal Memuat Daftar Tiket"
-          message="Tidak dapat membaca transaksi tiket dari sistem. Silakan ulangi kembali."
-          onRetry={() => {
-            setViewState('normal');
-            setToastType('info');
-            setToastMessage('Berhasil memuat ulang data tiket');
-          }}
+          message="Tidak dapat membaca koleksi tiket dari Cloud Firestore. Silakan periksa koneksi internet."
+          onRetry={loadData}
         />
       )}
 
@@ -205,7 +217,7 @@ export default function TiketPage() {
         <EmptyState
           icon={<Ticket className="w-7 h-7" />}
           title="Belum ada transaksi tiket"
-          description="Belum ada tiket yang diterbitkan untuk pembeli. Klik tombol di bawah untuk mencatat pembelian baru."
+          description="Belum ada tiket yang diterbitkan di database Firestore. Klik tombol di bawah untuk mencatat pembelian baru."
           actionLabel="Catat Tiket Baru"
           onAction={() => setIsModalOpen(true)}
         />
@@ -363,7 +375,7 @@ export default function TiketPage() {
       <ConfirmDialog
         isOpen={Boolean(confirmCancelId)}
         title="Batalkan Tiket Ini?"
-        message="Pembelian tiket yang dibatalkan tidak dapat diaktifkan kembali. Kuota event akan secara otomatis dikembalikan ke acara."
+        message="Pembelian tiket yang dibatalkan tidak dapat diaktifkan kembali. Kuota event di Firestore akan otomatis dikembalikan ke acara."
         confirmLabel="Ya, Batalkan Tiket"
         cancelLabel="Kembali"
         isDangerous={true}

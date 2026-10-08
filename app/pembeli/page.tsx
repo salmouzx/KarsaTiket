@@ -9,12 +9,12 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Toast } from '@/components/ui/Toast';
 import { PembeliFormModal } from '@/components/pembeli/PembeliFormModal';
 import { PembeliItem } from '@/types/firestore';
-import { Store } from '@/lib/store';
+import { PembeliService } from '@/lib/firestore-service';
 
 export default function PembeliPage() {
   const [pembeliList, setPembeliList] = useState<PembeliItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewState, setViewState] = useState<'normal' | 'loading' | 'empty' | 'error'>('normal');
+  const [viewState, setViewState] = useState<'normal' | 'loading' | 'empty' | 'error'>('loading');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
 
@@ -23,16 +23,33 @@ export default function PembeliPage() {
   const [editingPembeli, setEditingPembeli] = useState<PembeliItem | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  // Ambil data pembeli dari Firestore
+  const loadPembeli = async () => {
+    setViewState('loading');
+    try {
+      const data = await PembeliService.getAll();
+      setPembeliList(data);
+      if (data.length === 0) {
+        setViewState('empty');
+      } else {
+        setViewState('normal');
+      }
+    } catch (err: any) {
+      console.error('Error fetching pembeli:', err);
+      setViewState('error');
+    }
+  };
+
   useEffect(() => {
-    setPembeliList(Store.getPembeli());
+    loadPembeli();
   }, []);
 
-  // Daftar nomor WA yang sudah terdaftar untuk cek duplikasi
+  // Daftar nomor WA yang sudah terdaftar
   const existingPhones = useMemo(() => {
     return pembeliList.map((p) => p.no_whatsapp);
   }, [pembeliList]);
 
-  // Acceptance Criteria 4: Filter pencarian berdasarkan nama atau no_whatsapp
+  // Acceptance Criteria 4: Filter pencarian realtime berdasarkan nama atau no_whatsapp
   const filteredPembeli = useMemo(() => {
     if (!searchQuery.trim()) return pembeliList;
     const q = searchQuery.toLowerCase();
@@ -53,37 +70,52 @@ export default function PembeliPage() {
     setIsModalOpen(true);
   };
 
-  // Handler Simpan Data Pembeli
-  const handleSavePembeli = (pembeliData: Omit<PembeliItem, 'dibuat_pada'>) => {
-    const res = Store.savePembeli(pembeliData);
-    if (!res.success) {
+  // Handler Simpan Data Pembeli ke Firestore
+  const handleSavePembeli = async (pembeliData: Omit<PembeliItem, 'dibuat_pada'>) => {
+    try {
+      if (editingPembeli) {
+        // Mode Edit Firestore: Update nama & email
+        await PembeliService.update(pembeliData.no_whatsapp, {
+          nama: pembeliData.nama,
+          email: pembeliData.email,
+        });
+        setToastType('success');
+        setToastMessage(`Data pembeli "${pembeliData.nama}" berhasil diperbarui di Firestore`);
+      } else {
+        // Mode Tambah Firestore: Cek getDoc duplikat lalu setDoc
+        await PembeliService.create({
+          nama: pembeliData.nama,
+          no_whatsapp: pembeliData.no_whatsapp,
+          email: pembeliData.email,
+        });
+        setToastType('success');
+        setToastMessage(`Pembeli "${pembeliData.nama}" berhasil disimpan ke Firestore`);
+      }
+
+      setIsModalOpen(false);
+      setEditingPembeli(null);
+      await loadPembeli();
+    } catch (err: any) {
       setToastType('error');
-      setToastMessage(res.error || 'Gagal menyimpan pembeli');
+      setToastMessage(err.message || 'Gagal menyimpan data pembeli ke Firestore');
       return false;
     }
-
-    setPembeliList(Store.getPembeli());
-    setToastType('success');
-    if (editingPembeli) {
-      setToastMessage(`Data pembeli "${pembeliData.nama}" berhasil diperbarui`);
-    } else {
-      setToastMessage(`Pembeli "${pembeliData.nama}" berhasil didaftarkan`);
-    }
-
-    setIsModalOpen(false);
-    setEditingPembeli(null);
-    if (viewState === 'empty') setViewState('normal');
   };
 
-  // Handler Hapus Pembeli (Acceptance criteria 5)
-  const handleConfirmDelete = () => {
+  // Handler Hapus Pembeli dari Firestore (Acceptance criteria 5)
+  const handleConfirmDelete = async () => {
     if (!confirmDeleteId) return;
     const target = pembeliList.find((p) => p.id === confirmDeleteId);
-    Store.deletePembeli(confirmDeleteId);
-    setPembeliList(Store.getPembeli());
-    setConfirmDeleteId(null);
-    setToastType('success');
-    setToastMessage(`Pembeli "${target?.nama || ''}" berhasil dihapus`);
+    try {
+      await PembeliService.delete(confirmDeleteId);
+      setConfirmDeleteId(null);
+      setToastType('success');
+      setToastMessage(`Pembeli "${target?.nama || ''}" berhasil dihapus dari Firestore`);
+      await loadPembeli();
+    } catch (err: any) {
+      setToastType('error');
+      setToastMessage(err.message || 'Gagal menghapus pembeli');
+    }
   };
 
   return (
@@ -95,12 +127,12 @@ export default function PembeliPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
               Modul Pembeli
             </h1>
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 shadow-2xs">
-              Koleksi: pembeli
+            <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+              Live Firestore: pembeli
             </span>
           </div>
           <p className="text-sm text-slate-500 mt-1">
-            Mengelola data nama, nomor WhatsApp (ID dokumen unik), dan email pembeli tiket.
+            Mengelola data nama, nomor WhatsApp (ID dokumen unik), dan email pembeli tiket di Cloud Firestore.
           </p>
         </div>
 
@@ -155,12 +187,8 @@ export default function PembeliPage() {
       {viewState === 'error' && (
         <ErrorState
           title="Gagal Memuat Data Pembeli"
-          message="Tidak dapat membaca data pembeli dari sistem. Silakan periksa koneksi internet."
-          onRetry={() => {
-            setViewState('normal');
-            setToastType('info');
-            setToastMessage('Berhasil memuat ulang data pembeli');
-          }}
+          message="Tidak dapat membaca koleksi pembeli dari Cloud Firestore. Silakan periksa koneksi internet."
+          onRetry={loadPembeli}
         />
       )}
 
@@ -168,7 +196,7 @@ export default function PembeliPage() {
         <EmptyState
           icon={<Users className="w-7 h-7" />}
           title="Belum ada pembeli"
-          description="Data pembeli belum tercatat di sistem. Tambahkan data pembeli baru untuk mulai memesan tiket."
+          description="Data pembeli belum tercatat di Firestore. Tambahkan data pembeli baru untuk mulai memesan tiket."
           actionLabel="Tambah Pembeli"
           onAction={handleOpenAdd}
         />
@@ -206,7 +234,7 @@ export default function PembeliPage() {
               <p className="text-sm font-medium text-slate-700">
                 {searchQuery
                   ? `Tidak ada pembeli dengan kata kunci "${searchQuery}"`
-                  : 'Belum ada data pembeli terdaftar'}
+                  : 'Belum ada data pembeli di Firestore'}
               </p>
               <p className="text-xs text-slate-400 mt-1">
                 {searchQuery
@@ -247,7 +275,7 @@ export default function PembeliPage() {
                   <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 w-full sm:w-auto justify-end">
                     <button
                       onClick={() => handleOpenEdit(p)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                       title="Ubah data pembeli"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
@@ -255,7 +283,7 @@ export default function PembeliPage() {
                     </button>
                     <button
                       onClick={() => setConfirmDeleteId(p.id)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-rose-200 text-xs font-medium text-rose-700 hover:bg-rose-50 transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-rose-200 text-xs font-medium text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"
                       title="Hapus data pembeli"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -285,7 +313,7 @@ export default function PembeliPage() {
       <ConfirmDialog
         isOpen={Boolean(confirmDeleteId)}
         title="Hapus Pembeli Ini?"
-        message="Data pembeli akan dihapus dari sistem. Pastikan pembeli ini tidak memiliki tiket aktif yang belum diselesaikan."
+        message="Data pembeli akan dihapus dari Cloud Firestore. Pastikan pembeli ini tidak memiliki tiket aktif yang belum diselesaikan."
         confirmLabel="Hapus Pembeli"
         cancelLabel="Batal"
         isDangerous={true}
