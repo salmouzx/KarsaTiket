@@ -80,7 +80,7 @@ export default function PembeliPage() {
           email: pembeliData.email,
         });
         setToastType('success');
-        setToastMessage(`Data pembeli "${pembeliData.nama}" berhasil diperbarui di Firestore`);
+        setToastMessage(`Data pembeli "${pembeliData.nama}" berhasil diperbarui`);
       } else {
         // Mode Tambah Firestore: Cek getDoc duplikat lalu setDoc
         await PembeliService.create({
@@ -89,7 +89,7 @@ export default function PembeliPage() {
           email: pembeliData.email,
         });
         setToastType('success');
-        setToastMessage(`Pembeli "${pembeliData.nama}" berhasil disimpan ke Firestore`);
+        setToastMessage(`Pembeli "${pembeliData.nama}" berhasil didaftarkan`);
       }
 
       setIsModalOpen(false);
@@ -97,12 +97,12 @@ export default function PembeliPage() {
       await loadPembeli();
     } catch (err: any) {
       setToastType('error');
-      setToastMessage(err.message || 'Gagal menyimpan data pembeli ke Firestore');
+      setToastMessage(err.message || 'Gagal menyimpan data pembeli');
       return false;
     }
   };
 
-  // Handler Hapus Pembeli dari Firestore (Acceptance criteria 5)
+  // Handler Hapus Pembeli
   const handleConfirmDelete = async () => {
     if (!confirmDeleteId) return;
     const target = pembeliList.find((p) => p.id === confirmDeleteId);
@@ -110,7 +110,7 @@ export default function PembeliPage() {
       await PembeliService.delete(confirmDeleteId);
       setConfirmDeleteId(null);
       setToastType('success');
-      setToastMessage(`Pembeli "${target?.nama || ''}" berhasil dihapus dari Firestore`);
+      setToastMessage(`Pembeli "${target?.nama || ''}" berhasil dihapus`);
       await loadPembeli();
     } catch (err: any) {
       setToastType('error');
@@ -123,62 +123,21 @@ export default function PembeliPage() {
       {/* Header Halaman */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200/60">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-              Modul Pembeli
-            </h1>
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-              Live Firestore: pembeli
-            </span>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            Data Pembeli
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Mengelola data nama, nomor WhatsApp (ID dokumen unik), dan email pembeli tiket di Cloud Firestore.
+            Kelola kontak dan informasi pembeli tiket acara.
           </p>
         </div>
 
-        {/* Demo Switcher State */}
-        <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl text-xs font-medium self-start sm:self-auto border border-slate-300/60">
-          <button
-            onClick={() => setViewState('normal')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'normal'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Normal ({pembeliList.length})
-          </button>
-          <button
-            onClick={() => setViewState('loading')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'loading'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Loading
-          </button>
-          <button
-            onClick={() => setViewState('empty')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'empty'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Empty
-          </button>
-          <button
-            onClick={() => setViewState('error')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'error'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Error
-          </button>
-        </div>
+        <button
+          onClick={handleOpenAdd}
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer self-start sm:self-auto shrink-0"
+        >
+          <UserPlus className="w-4 h-4" />
+          <span>Tambah Pembeli</span>
+        </button>
       </div>
 
       {/* Konten Berdasarkan State */}
@@ -187,44 +146,33 @@ export default function PembeliPage() {
       {viewState === 'error' && (
         <ErrorState
           title="Gagal Memuat Data Pembeli"
-          message="Tidak dapat membaca koleksi pembeli dari Cloud Firestore. Silakan periksa koneksi internet."
+          message="Terjadi kendala saat memuat data pembeli. Silakan periksa koneksi internet Anda."
           onRetry={loadPembeli}
         />
       )}
 
-      {viewState === 'empty' && (
+      {viewState !== 'loading' && viewState !== 'error' && pembeliList.length === 0 && (
         <EmptyState
           icon={<Users className="w-7 h-7" />}
-          title="Belum ada pembeli"
-          description="Data pembeli belum tercatat di Firestore. Tambahkan data pembeli baru untuk mulai memesan tiket."
+          title="Belum Ada Pembeli"
+          description="Data pembeli belum tercatat. Tambahkan pembeli baru untuk mulai memproses pesanan tiket."
           actionLabel="Tambah Pembeli"
           onAction={handleOpenAdd}
         />
       )}
 
-      {viewState === 'normal' && (
+      {viewState !== 'loading' && viewState !== 'error' && pembeliList.length > 0 && (
         <div className="space-y-4">
-          {/* Bar Atas: Pencarian & Tombol Tambah */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            {/* Kolom Cari Real-Time (Acceptance Criteria 4) */}
-            <div className="relative flex-1 max-w-lg">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari pembeli berdasarkan nama atau no WhatsApp..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs placeholder:text-slate-400 transition-all"
-              />
-            </div>
-
-            <button
-              onClick={handleOpenAdd}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer shrink-0"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Tambah Pembeli</span>
-            </button>
+          {/* Bar Atas: Pencarian */}
+          <div className="relative max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari pembeli berdasarkan nama atau no WhatsApp..."
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs placeholder:text-slate-400 transition-all"
+            />
           </div>
 
           {/* Daftar Pembeli */}
@@ -313,7 +261,7 @@ export default function PembeliPage() {
       <ConfirmDialog
         isOpen={Boolean(confirmDeleteId)}
         title="Hapus Pembeli Ini?"
-        message="Data pembeli akan dihapus dari Cloud Firestore. Pastikan pembeli ini tidak memiliki tiket aktif yang belum diselesaikan."
+        message="Data pembeli akan dihapus secara permanen. Pastikan pembeli ini tidak memiliki transaksi tiket aktif."
         confirmLabel="Hapus Pembeli"
         cancelLabel="Batal"
         isDangerous={true}

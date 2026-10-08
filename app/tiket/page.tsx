@@ -78,7 +78,7 @@ export default function TiketPage() {
     try {
       await TiketService.create(params);
       setToastType('success');
-      setToastMessage('Tiket berhasil dicatat dan tersimpan ke Cloud Firestore!');
+      setToastMessage('Pemesanan tiket berhasil dicatat!');
       setIsModalOpen(false);
       await loadData();
     } catch (err: any) {
@@ -111,62 +111,21 @@ export default function TiketPage() {
       {/* Header Halaman */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200/60">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-              Modul Tiket
-            </h1>
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-              Live Firestore: tiket
-            </span>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            Kelola Tiket
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Mencatat pembelian tiket, menghitung total, pelunasan transfer, dan check-in kehadiran di Cloud Firestore.
+            Pencatatan pemesanan tiket, verifikasi pembayaran, dan presensi kehadiran peserta.
           </p>
         </div>
 
-        {/* Demo Switcher State */}
-        <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl text-xs font-medium self-start sm:self-auto border border-slate-300/60">
-          <button
-            onClick={() => setViewState('normal')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'normal'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Normal ({tiketList.length})
-          </button>
-          <button
-            onClick={() => setViewState('loading')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'loading'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Loading
-          </button>
-          <button
-            onClick={() => setViewState('empty')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'empty'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Empty
-          </button>
-          <button
-            onClick={() => setViewState('error')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'error'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Error
-          </button>
-        </div>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Catat Tiket Baru</span>
+        </button>
       </div>
 
       {/* Tabs Filter Status */}
@@ -208,36 +167,23 @@ export default function TiketPage() {
       {viewState === 'error' && (
         <ErrorState
           title="Gagal Memuat Daftar Tiket"
-          message="Tidak dapat membaca koleksi tiket dari Cloud Firestore. Silakan periksa koneksi internet."
+          message="Terjadi kendala saat memuat data tiket. Silakan periksa koneksi internet Anda."
           onRetry={loadData}
         />
       )}
 
-      {viewState === 'empty' && (
+      {viewState !== 'loading' && viewState !== 'error' && tiketList.length === 0 && (
         <EmptyState
           icon={<Ticket className="w-7 h-7" />}
-          title="Belum ada transaksi tiket"
-          description="Belum ada tiket yang diterbitkan di database Firestore. Klik tombol di bawah untuk mencatat pembelian baru."
+          title="Belum Ada Tiket"
+          description="Belum ada transaksi tiket yang tercatat. Klik tombol di atas untuk mencatat pesanan tiket baru."
           actionLabel="Catat Tiket Baru"
           onAction={() => setIsModalOpen(true)}
         />
       )}
 
-      {viewState === 'normal' && (
+      {viewState !== 'loading' && viewState !== 'error' && tiketList.length > 0 && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Daftar Tiket Terdaftar ({filteredTiket.length})
-            </span>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Catat Tiket</span>
-            </button>
-          </div>
-
           {filteredTiket.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-300 p-6">
               <Ticket className="w-8 h-8 text-slate-300 mx-auto mb-2" />

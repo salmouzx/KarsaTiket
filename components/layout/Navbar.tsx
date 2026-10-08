@@ -48,60 +48,30 @@ export const Navbar: React.FC = () => {
               <span className="font-bold text-slate-900 text-base tracking-tight group-hover:text-indigo-600 transition-colors">
                 Karsa Tiket
               </span>
-              <span className="hidden sm:inline-block ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-                Komunitas Kreatif
-              </span>
             </div>
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-2" aria-label="Menu Utama">
-            <div className="flex items-center gap-1.5">
-              {NAV_ITEMS.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                      isActive
-                        ? 'bg-indigo-50 text-indigo-700 shadow-xs font-semibold'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
-            </div>
-
-            <div className="h-5 w-px bg-slate-200 mx-1"></div>
-
-            <Link
-              href="/uji-rules"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                pathname === '/uji-rules'
-                  ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-xs'
-                  : 'bg-amber-50 text-amber-800 border-amber-200/80 hover:bg-amber-100'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-              <span>Uji Rules</span>
-            </Link>
+          <nav className="hidden md:flex items-center gap-1.5" aria-label="Menu Utama">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-indigo-50 text-indigo-700 shadow-xs font-semibold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
           </nav>
-
-          {/* Quick Info Tag on mobile */}
-          <div className="md:hidden">
-            <Link
-              href="/uji-rules"
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200"
-            >
-              <ShieldCheck className="w-3 h-3 text-amber-600" />
-              <span>Uji Rules</span>
-            </Link>
-          </div>
         </div>
       </header>
 

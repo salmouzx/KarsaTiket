@@ -60,7 +60,7 @@ export default function RekapPage() {
   const handleSelectEvent = async (eventId: string) => {
     setSelectedEventId(eventId);
     await loadRekapData(eventId);
-    setToastMessage('Data rekapitulasi acara diperbarui dari Firestore');
+    setToastMessage('Data rekapitulasi acara berhasil diperbarui');
   };
 
   const formatRupiah = (val: number) => {
@@ -96,61 +96,12 @@ export default function RekapPage() {
       {/* Header Halaman */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200/60">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-              Modul Rekap
-            </h1>
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-              Live Firestore: event & tiket
-            </span>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            Rekapitulasi Penjualan
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Ringkasan tiket terjual, sisa kuota, kalkulasi pendapatan sah, dan kehadiran peserta per event di Cloud Firestore.
+            Ringkasan tiket terjual, sisa kuota, kalkulasi pendapatan, dan kehadiran peserta per acara.
           </p>
-        </div>
-
-        {/* Demo Switcher State */}
-        <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl text-xs font-medium self-start sm:self-auto border border-slate-300/60">
-          <button
-            onClick={() => setViewState('normal')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'normal'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Normal
-          </button>
-          <button
-            onClick={() => setViewState('loading')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'loading'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Loading
-          </button>
-          <button
-            onClick={() => setViewState('empty')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'empty'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Empty
-          </button>
-          <button
-            onClick={() => setViewState('error')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'error'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Error
-          </button>
         </div>
       </div>
 
@@ -160,24 +111,24 @@ export default function RekapPage() {
       {viewState === 'error' && (
         <ErrorState
           title="Gagal Memuat Rekap"
-          message="Koneksi terputus saat membaca dan menghitung rekapitulasi data dari Firestore. Silakan coba lagi."
+          message="Terjadi kendala saat menghitung data rekapitulasi. Silakan periksa koneksi internet Anda."
           onRetry={loadInitialData}
         />
       )}
 
-      {viewState === 'empty' && (
+      {viewState !== 'loading' && viewState !== 'error' && events.length === 0 && (
         <EmptyState
           icon={<BarChart3 className="w-7 h-7" />}
           title="Belum Ada Acara untuk Direkap"
           description="Tambahkan acara baru dan catat penjualan tiket untuk melihat rekapitulasi pendapatan."
-          actionLabel="Tambah Event Baru"
+          actionLabel="Tambah Acara Baru"
           onAction={() => {
             window.location.href = '/event';
           }}
         />
       )}
 
-      {viewState === 'normal' && currentEvent && (
+      {viewState !== 'loading' && viewState !== 'error' && events.length > 0 && currentEvent && (
         <div className="space-y-6">
           {/* Select Event (Acceptance Criteria 1) */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">

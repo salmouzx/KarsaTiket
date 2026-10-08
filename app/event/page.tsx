@@ -78,7 +78,7 @@ export default function EventPage() {
           kuota: savedData.kuota,
         });
         setToastType('success');
-        setToastMessage(`Data event "${savedData.nama}" berhasil diperbarui di Firestore`);
+        setToastMessage(`Acara "${savedData.nama}" berhasil diperbarui`);
       } else {
         // Create Firestore
         await EventService.create({
@@ -89,20 +89,20 @@ export default function EventPage() {
           kuota: savedData.kuota,
         });
         setToastType('success');
-        setToastMessage(`Event "${savedData.nama}" berhasil disimpan ke Firestore`);
+        setToastMessage(`Acara "${savedData.nama}" berhasil ditambahkan`);
       }
       setIsModalOpen(false);
       setEditingEvent(null);
       await loadEvents();
     } catch (err: any) {
       setToastType('error');
-      setToastMessage(err.message || 'Gagal menyimpan data event ke Firestore');
+      setToastMessage(err.message || 'Gagal menyimpan data acara');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handler Hapus Event dari Firestore
+  // Handler Hapus Event
   const handleConfirmDelete = async () => {
     if (!confirmDeleteId) return;
     const target = events.find((e) => e.id === confirmDeleteId);
@@ -110,7 +110,7 @@ export default function EventPage() {
       await EventService.delete(confirmDeleteId);
       setConfirmDeleteId(null);
       setToastType('success');
-      setToastMessage(`Event "${target?.nama || ''}" berhasil dihapus dari Firestore`);
+      setToastMessage(`Acara "${target?.nama || ''}" berhasil dihapus`);
       await loadEvents();
     } catch (err: any) {
       setToastType('error');
@@ -123,62 +123,21 @@ export default function EventPage() {
       {/* Header Halaman */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200/60">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-              Modul Event
-            </h1>
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-              Live Firestore: event
-            </span>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            Daftar Acara
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Mengelola data acara, tanggal, lokasi, harga tiket, kuota, dan sisa kursi tersedia di Cloud Firestore.
+            Kelola jadwal acara, kapasitas kuota tiket, dan harga penjualan.
           </p>
         </div>
 
-        {/* Demo Switcher State (Uji 3 State) */}
-        <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl text-xs font-medium self-start sm:self-auto border border-slate-300/60">
-          <button
-            onClick={() => setViewState('normal')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'normal'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Normal ({events.length})
-          </button>
-          <button
-            onClick={() => setViewState('loading')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'loading'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Loading
-          </button>
-          <button
-            onClick={() => setViewState('empty')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'empty'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Empty
-          </button>
-          <button
-            onClick={() => setViewState('error')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              viewState === 'error'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Error
-          </button>
-        </div>
+        <button
+          onClick={handleOpenAdd}
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Tambah Acara</span>
+        </button>
       </div>
 
       {/* Konten Berdasarkan State */}
@@ -186,48 +145,25 @@ export default function EventPage() {
 
       {viewState === 'error' && (
         <ErrorState
-          title="Gagal Memuat Daftar Event"
-          message="Koneksi terputus saat membaca data event dari Firestore. Silakan periksa jaringan Anda."
+          title="Gagal Memuat Acara"
+          message="Terjadi kendala saat memuat data acara. Silakan periksa koneksi internet Anda."
           onRetry={loadEvents}
         />
       )}
 
-      {viewState === 'empty' && (
+      {viewState !== 'loading' && viewState !== 'error' && events.length === 0 && (
         <EmptyState
           icon={<Calendar className="w-7 h-7" />}
-          title="Belum ada event"
-          description="Belum ada acara yang terdaftar di database Firestore. Mulai buat acara pertama untuk menjual tiket."
-          actionLabel="Tambah Event"
+          title="Belum Ada Acara"
+          description="Belum ada acara yang terdaftar. Buat acara pertama untuk mulai membuka penjualan tiket."
+          actionLabel="Tambah Acara"
           onAction={handleOpenAdd}
         />
       )}
 
-      {viewState === 'normal' && (
+      {viewState !== 'loading' && viewState !== 'error' && events.length > 0 && (
         <div className="space-y-4">
-          {/* Bar Aksi Utama */}
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Daftar Acara ({events.length})
-            </span>
-            <button
-              onClick={handleOpenAdd}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Tambah Event</span>
-            </button>
-          </div>
-
-          {events.length === 0 ? (
-            <EmptyState
-              icon={<Calendar className="w-7 h-7" />}
-              title="Belum ada event"
-              description="Belum ada acara yang terdaftar di Firestore. Mulai buat acara pertama untuk menjual tiket."
-              actionLabel="Tambah Event"
-              onAction={handleOpenAdd}
-            />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {events.map((ev) => {
                 const sisaKuota = Math.max(0, ev.kuota - (ev.tiket_terjual || 0));
                 const isHabis = (ev.tiket_terjual || 0) >= ev.kuota;
@@ -307,7 +243,6 @@ export default function EventPage() {
                 );
               })}
             </div>
-          )}
         </div>
       )}
 

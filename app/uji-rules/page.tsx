@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShieldAlert, Play, CheckCircle2, XCircle, AlertTriangle, ArrowLeft, RefreshCw, Copy, Check } from 'lucide-react';
+import { ShieldAlert, Play, CheckCircle2, XCircle, AlertTriangle, ArrowLeft, RefreshCw, Copy, Check, Database, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { collection, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { seedSemarangData, SeedResult } from '@/lib/seed-data';
 
 interface TestResult {
   id: number;
@@ -23,6 +24,27 @@ export default function UjiRulesPage() {
   });
 
   const [copiedRules, setCopiedRules] = useState(false);
+  const [seedLoading, setSeedLoading] = useState(false);
+  const [seedResult, setSeedResult] = useState<SeedResult | null>(null);
+
+  const handleSeedData = async () => {
+    setSeedLoading(true);
+    setSeedResult(null);
+    try {
+      const res = await seedSemarangData();
+      setSeedResult(res);
+    } catch (err: any) {
+      setSeedResult({
+        success: false,
+        message: err.message || 'Gagal mengisi data sample',
+        eventsCreated: 0,
+        pembeliCreated: 0,
+        tiketCreated: 0,
+      });
+    } finally {
+      setSeedLoading(false);
+    }
+  };
 
   // Jalankan Uji 1: Field Kosong (Event tanpa nama)
   const runTest1 = async () => {
@@ -227,6 +249,84 @@ export default function UjiRulesPage() {
           <li>Tempelkan (*paste*) ke editor Rules di Firebase Console, lalu klik tombol <strong>Publish</strong>.</li>
           <li>Setelah di-publish, klik tombol <em>Jalankan Semua Uji</em> di atas untuk memverifikasi penolakan (DITOLAK/Permission Denied).</li>
         </ol>
+      </div>
+
+      {/* Bagian Seeding Data Sample Semarang (8 Data Sesuai Rule Dashboard) */}
+      <div className="bg-white border border-indigo-100 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Database className="w-5 h-5 text-indigo-600" />
+              <h2 className="text-base font-bold text-slate-900">
+                Inisialisasi Data Sampel Kota Semarang (8 Transaksi Tiket)
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500">
+              Memasukkan data riil 3 Acara Kreatif Semarang (Kota Lama, TBRS, Sam Poo Kong), 8 Pembeli, dan tepat 2 tiket untuk setiap rule status dashboard (2 menunggu bayar, 2 lunas, 2 hadir, 2 dibatalkan).
+            </p>
+          </div>
+
+          <button
+            onClick={handleSeedData}
+            disabled={seedLoading}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs cursor-pointer disabled:opacity-50 shrink-0"
+          >
+            {seedLoading ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Memproses Data...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                <span>Isi Data Sampel Semarang</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Notifikasi Hasil Seeding */}
+        {seedResult && (
+          <div
+            className={`p-4 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+              seedResult.success
+                ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                : 'bg-rose-50 text-rose-900 border-rose-200'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {seedResult.success ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              ) : (
+                <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+              )}
+              <span>{seedResult.message}</span>
+            </div>
+
+            {seedResult.success && (
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <Link
+                  href="/event"
+                  className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold"
+                >
+                  Lihat Event
+                </Link>
+                <Link
+                  href="/tiket"
+                  className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold"
+                >
+                  Lihat Tiket
+                </Link>
+                <Link
+                  href="/rekap"
+                  className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold"
+                >
+                  Lihat Rekap
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Daftar 6 Skenario Uji */}
