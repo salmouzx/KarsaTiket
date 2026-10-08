@@ -34,3 +34,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# documentation & assignment reference files
+*.docx.md
+LEMBAR_UJI_MANDIRI.md
