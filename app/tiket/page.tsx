@@ -121,7 +121,7 @@ export default function TiketPage() {
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-800 hover:bg-blue-900 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Catat Tiket Baru</span>
@@ -144,7 +144,7 @@ export default function TiketPage() {
               onClick={() => setActiveTab(tab)}
               className={`px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                 isActive
-                  ? 'bg-indigo-600 text-white shadow-xs font-semibold'
+                  ? 'bg-blue-800 text-white shadow-xs font-semibold'
                   : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >
@@ -246,11 +246,11 @@ export default function TiketPage() {
                         </div>
                         <div>
                           <span className="text-slate-400 block text-[10px] uppercase font-semibold">Jumlah</span>
-                          <span className="font-bold text-indigo-700">{t.jumlah_tiket} lembar</span>
+                          <span className="font-bold text-blue-800">{t.jumlah_tiket} lembar</span>
                         </div>
                         <div className="text-right">
                           <span className="text-slate-400 block text-[10px] uppercase font-semibold">Total Bayar</span>
-                          <span className="font-extrabold text-sm text-indigo-700">{formatRupiah(t.total)}</span>
+                          <span className="font-extrabold text-sm text-blue-800">{formatRupiah(t.total)}</span>
                         </div>
                       </div>
                     </div>

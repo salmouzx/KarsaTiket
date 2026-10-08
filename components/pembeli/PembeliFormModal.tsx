@@ -159,7 +159,7 @@ export const PembeliFormModal: React.FC<PembeliFormModalProps> = ({
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-all ${
                   errors.nama
                     ? 'border-rose-400 focus:ring-rose-400'
-                    : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'
+                    : 'border-slate-200 focus:ring-blue-700 focus:border-blue-700'
                 }`}
               />
             </div>
@@ -199,7 +199,7 @@ export const PembeliFormModal: React.FC<PembeliFormModalProps> = ({
                     ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200'
                     : errors.no_whatsapp
                     ? 'bg-slate-50 border-rose-400 focus:ring-rose-400 focus:bg-white'
-                    : 'bg-slate-50 border-slate-200 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white'
+                    : 'bg-slate-50 border-slate-200 focus:ring-blue-700 focus:border-blue-700 focus:bg-white'
                 }`}
               />
             </div>
@@ -230,7 +230,7 @@ export const PembeliFormModal: React.FC<PembeliFormModalProps> = ({
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-all ${
                   errors.email
                     ? 'border-rose-400 focus:ring-rose-400'
-                    : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'
+                    : 'border-slate-200 focus:ring-blue-700 focus:border-blue-700'
                 }`}
               />
             </div>
@@ -257,7 +257,7 @@ export const PembeliFormModal: React.FC<PembeliFormModalProps> = ({
             </button>
             <button
               type="submit"
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-800 hover:bg-blue-900 text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
               {isEditing ? 'Perbarui Pembeli' : 'Simpan Pembeli'}
             </button>

@@ -133,7 +133,7 @@ export default function EventPage() {
 
         <button
           onClick={handleOpenAdd}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-800 hover:bg-blue-900 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Tambah Acara</span>
@@ -176,7 +176,7 @@ export default function EventPage() {
                     <div className="space-y-2.5">
                       {/* Judul & Badge Kuota */}
                       <div className="flex items-start justify-between gap-2">
-                        <h2 className="font-bold text-slate-900 text-base leading-snug group-hover:text-indigo-600 transition-colors">
+                        <h2 className="font-bold text-slate-900 text-base leading-snug group-hover:text-blue-900 transition-colors">
                           {ev.nama}
                         </h2>
                         {isHabis ? (
@@ -215,7 +215,7 @@ export default function EventPage() {
                         <span className="text-[10px] uppercase font-semibold text-slate-400 block tracking-wider">
                           Harga Tiket
                         </span>
-                        <span className="text-sm font-extrabold text-indigo-700">
+                        <span className="text-sm font-extrabold text-blue-800">
                           {ev.harga_tiket === 0 ? 'Gratis' : formatRupiah(ev.harga_tiket)}
                         </span>
                       </div>

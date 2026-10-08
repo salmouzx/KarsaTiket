@@ -34,13 +34,13 @@ export const Toast: React.FC<ToastProps> = ({
   const styles = {
     success: 'bg-emerald-900/90 text-emerald-100 border-emerald-700/60 shadow-emerald-950/20',
     error: 'bg-rose-900/90 text-rose-100 border-rose-700/60 shadow-rose-950/20',
-    info: 'bg-indigo-900/90 text-indigo-100 border-indigo-700/60 shadow-indigo-950/20',
+    info: 'bg-blue-950/90 text-blue-100 border-blue-800/60 shadow-blue-950/20',
   }[type];
 
   const icons = {
     success: <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />,
     error: <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />,
-    info: <Info className="w-5 h-5 text-indigo-400 shrink-0" />,
+    info: <Info className="w-5 h-5 text-blue-300 shrink-0" />,
   }[type];
 
   return (

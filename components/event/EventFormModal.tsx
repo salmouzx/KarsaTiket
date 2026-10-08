@@ -172,7 +172,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
               className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-all ${
                 errors.nama
                   ? 'border-rose-400 focus:ring-rose-400'
-                  : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'
+                  : 'border-slate-200 focus:ring-blue-700 focus:border-blue-700'
               }`}
             />
             <div className="flex justify-between items-center text-[11px]">
@@ -201,7 +201,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-all ${
                   errors.tanggal
                     ? 'border-rose-400 focus:ring-rose-400'
-                    : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'
+                    : 'border-slate-200 focus:ring-blue-700 focus:border-blue-700'
                 }`}
               />
             </div>
@@ -228,7 +228,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-all ${
                   errors.lokasi
                     ? 'border-rose-400 focus:ring-rose-400'
-                    : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'
+                    : 'border-slate-200 focus:ring-blue-700 focus:border-blue-700'
                 }`}
               />
             </div>
@@ -266,7 +266,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                   className={`w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-all ${
                     errors.harga_tiket
                       ? 'border-rose-400 focus:ring-rose-400'
-                      : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'
+                      : 'border-slate-200 focus:ring-blue-700 focus:border-blue-700'
                   }`}
                 />
               </div>
@@ -296,7 +296,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                   className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-all ${
                     errors.kuota
                       ? 'border-rose-400 focus:ring-rose-400'
-                      : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'
+                      : 'border-slate-200 focus:ring-blue-700 focus:border-blue-700'
                   }`}
                 />
               </div>
@@ -312,9 +312,9 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
 
           {/* Info Status Tiket Terjual Saat Edit */}
           {isEditing && initialData && (
-            <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl text-xs text-indigo-900 flex items-center justify-between">
+            <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-blue-900 flex items-center justify-between">
               <span>Tiket yang sudah terjual saat ini:</span>
-              <span className="font-bold text-indigo-700">{initialData.tiket_terjual} tiket</span>
+              <span className="font-bold text-blue-800">{initialData.tiket_terjual} tiket</span>
             </div>
           )}
 
@@ -329,7 +329,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
             </button>
             <button
               type="submit"
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-800 hover:bg-blue-900 text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
               {isEditing ? 'Perbarui Event' : 'Simpan Event'}
             </button>

@@ -133,7 +133,7 @@ export default function PembeliPage() {
 
         <button
           onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer self-start sm:self-auto shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-800 hover:bg-blue-900 text-white text-sm font-semibold shadow-xs hover:shadow transition-all cursor-pointer self-start sm:self-auto shrink-0"
         >
           <UserPlus className="w-4 h-4" />
           <span>Tambah Pembeli</span>
@@ -171,7 +171,7 @@ export default function PembeliPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari pembeli berdasarkan nama atau no WhatsApp..."
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs placeholder:text-slate-400 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700 shadow-xs placeholder:text-slate-400 transition-all"
             />
           </div>
 
@@ -199,7 +199,7 @@ export default function PembeliPage() {
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <h2 className="font-bold text-slate-900 text-base group-hover:text-indigo-600 transition-colors">
+                      <h2 className="font-bold text-slate-900 text-base group-hover:text-blue-900 transition-colors">
                         {p.nama}
                       </h2>
                       <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200/60">
@@ -209,7 +209,7 @@ export default function PembeliPage() {
 
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-slate-600">
                       <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                        <Phone className="w-3.5 h-3.5 text-indigo-500" />
+                        <Phone className="w-3.5 h-3.5 text-blue-700" />
                         <span>{p.no_whatsapp}</span>
                       </span>
                       <span className="flex items-center gap-1.5">

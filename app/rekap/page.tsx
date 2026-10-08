@@ -154,7 +154,7 @@ export default function RekapPage() {
                 id="rekap-select-event"
                 value={selectedEventId}
                 onChange={(e) => handleSelectEvent(e.target.value)}
-                className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-xs transition-all"
+                className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-700 cursor-pointer shadow-xs transition-all"
               >
                 {events.map((ev) => (
                   <option key={ev.id} value={ev.id}>
@@ -170,7 +170,7 @@ export default function RekapPage() {
           <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3">
             <div className="flex justify-between items-center text-sm font-bold">
               <span className="text-slate-800">Kapasitas Kursi Terisi</span>
-              <span className="text-indigo-700">
+              <span className="text-blue-800">
                 {tiketTerjual} / {kuota} Kursi ({persentase}%)
               </span>
             </div>
@@ -181,7 +181,7 @@ export default function RekapPage() {
                     ? 'bg-rose-500'
                     : persentase >= 75
                     ? 'bg-amber-500'
-                    : 'bg-indigo-600'
+                    : 'bg-blue-800'
                 }`}
                 style={{ width: `${persentase}%` }}
               ></div>
@@ -199,7 +199,7 @@ export default function RekapPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Kartu 1: Tiket Terjual */}
             <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-1.5">
-              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-800 flex items-center justify-center mb-2">
                 <Ticket className="w-4 h-4" />
               </div>
               <span className="text-xs text-slate-500 font-semibold">Tiket Terjual</span>
@@ -250,7 +250,7 @@ export default function RekapPage() {
               </h3>
               <Link
                 href="/tiket"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-800 hover:text-blue-900"
               >
                 <span>Kelola di Modul Tiket</span>
                 <ArrowRight className="w-3.5 h-3.5" />

@@ -129,7 +129,7 @@ export const TiketFormModal: React.FC<TiketFormModalProps> = ({
                 setSelectedEventId(e.target.value);
                 setErrorMsg(null);
               }}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all cursor-pointer"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-700 focus:bg-white transition-all cursor-pointer"
             >
               {events.length === 0 ? (
                 <option value="">Belum ada event tersedia</option>
@@ -166,7 +166,7 @@ export const TiketFormModal: React.FC<TiketFormModalProps> = ({
                 setSelectedPembeliId(e.target.value);
                 setErrorMsg(null);
               }}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all cursor-pointer"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-700 focus:bg-white transition-all cursor-pointer"
             >
               {pembeliList.length === 0 ? (
                 <option value="">Belum ada data pembeli</option>
@@ -196,7 +196,7 @@ export const TiketFormModal: React.FC<TiketFormModalProps> = ({
                   setJumlahTiket(Math.floor(Number(e.target.value)));
                   setErrorMsg(null);
                 }}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-700 focus:bg-white transition-all"
               />
             </div>
             <p className="text-[11px] text-slate-400">
@@ -205,21 +205,21 @@ export const TiketFormModal: React.FC<TiketFormModalProps> = ({
           </div>
 
           {/* Kalkulasi Total Otomatis Sesuai AC 1 & Invariant 3 */}
-          <div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl space-y-2">
-            <div className="flex items-center justify-between text-xs text-indigo-900">
+          <div className="p-4 bg-blue-50/70 border border-blue-100 rounded-2xl space-y-2">
+            <div className="flex items-center justify-between text-xs text-blue-900">
               <span className="flex items-center gap-1.5">
-                <Calculator className="w-4 h-4 text-indigo-600" />
+                <Calculator className="w-4 h-4 text-blue-700" />
                 Harga per tiket:
               </span>
               <span className="font-semibold">{formatRupiah(hargaTiket)}</span>
             </div>
-            <div className="flex items-center justify-between text-xs text-indigo-900">
+            <div className="flex items-center justify-between text-xs text-blue-900">
               <span>Jumlah tiket dipesan:</span>
               <span className="font-semibold">{jumlahTiket || 0} lembar</span>
             </div>
-            <div className="pt-2 border-t border-indigo-200/60 flex items-center justify-between">
-              <span className="text-xs font-bold text-indigo-950 uppercase">Total Bayar:</span>
-              <span className="text-base font-extrabold text-indigo-700">
+            <div className="pt-2 border-t border-blue-200/60 flex items-center justify-between">
+              <span className="text-xs font-bold text-blue-950 uppercase">Total Bayar:</span>
+              <span className="text-base font-extrabold text-blue-800">
                 {formatRupiah(totalHarga)}
               </span>
             </div>
@@ -240,7 +240,7 @@ export const TiketFormModal: React.FC<TiketFormModalProps> = ({
               className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-white text-sm font-semibold shadow-xs transition-colors ${
                 sisaKuota <= 0
                   ? 'bg-slate-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700 cursor-pointer'
+                  : 'bg-blue-800 hover:bg-blue-900 cursor-pointer'
               }`}
             >
               Simpan Tiket

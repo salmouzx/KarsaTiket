@@ -68,7 +68,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             className={`w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-colors shadow-sm ${
               isDangerous
                 ? 'bg-rose-600 hover:bg-rose-700'
-                : 'bg-indigo-600 hover:bg-indigo-700'
+                : 'bg-blue-800 hover:bg-blue-900'
             }`}
           >
             {confirmLabel}
