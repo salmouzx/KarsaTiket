@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Users, Plus, Search, Phone, Mail, Edit3, Trash2, UserPlus } from 'lucide-react';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -9,25 +9,10 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Toast } from '@/components/ui/Toast';
 import { PembeliFormModal } from '@/components/pembeli/PembeliFormModal';
 import { PembeliItem } from '@/types/firestore';
-
-// Data contoh awal dari Skema Firestore Bab 4
-const INITIAL_MOCK_PEMBELI: PembeliItem[] = [
-  {
-    id: '081355512345',
-    nama: 'Nadia Putri',
-    no_whatsapp: '081355512345',
-    email: 'nadia.putri@contoh.id',
-  },
-  {
-    id: '081298765432',
-    nama: 'Budi Pratama',
-    no_whatsapp: '081298765432',
-    email: 'budi.pratama@mail.com',
-  },
-];
+import { Store } from '@/lib/store';
 
 export default function PembeliPage() {
-  const [pembeliList, setPembeliList] = useState<PembeliItem[]>(INITIAL_MOCK_PEMBELI);
+  const [pembeliList, setPembeliList] = useState<PembeliItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewState, setViewState] = useState<'normal' | 'loading' | 'empty' | 'error'>('normal');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -37,6 +22,10 @@ export default function PembeliPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPembeli, setEditingPembeli] = useState<PembeliItem | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPembeliList(Store.getPembeli());
+  }, []);
 
   // Daftar nomor WA yang sudah terdaftar untuk cek duplikasi
   const existingPhones = useMemo(() => {
@@ -66,34 +55,18 @@ export default function PembeliPage() {
 
   // Handler Simpan Data Pembeli
   const handleSavePembeli = (pembeliData: Omit<PembeliItem, 'dibuat_pada'>) => {
+    const res = Store.savePembeli(pembeliData);
+    if (!res.success) {
+      setToastType('error');
+      setToastMessage(res.error || 'Gagal menyimpan pembeli');
+      return false;
+    }
+
+    setPembeliList(Store.getPembeli());
+    setToastType('success');
     if (editingPembeli) {
-      // Mode Edit: Update nama dan email (no_whatsapp tetap sama sebagai ID)
-      setPembeliList((prev) =>
-        prev.map((item) =>
-          item.id === editingPembeli.id
-            ? { ...item, nama: pembeliData.nama, email: pembeliData.email }
-            : item
-        )
-      );
-      setToastType('success');
       setToastMessage(`Data pembeli "${pembeliData.nama}" berhasil diperbarui`);
     } else {
-      // Mode Tambah: Acceptance criteria 2 (cek no_whatsapp sudah ada)
-      if (existingPhones.includes(pembeliData.no_whatsapp)) {
-        setToastType('error');
-        setToastMessage('Nomor WhatsApp sudah terdaftar');
-        return false;
-      }
-
-      const newPembeli: PembeliItem = {
-        id: pembeliData.no_whatsapp,
-        no_whatsapp: pembeliData.no_whatsapp,
-        nama: pembeliData.nama,
-        email: pembeliData.email,
-      };
-
-      setPembeliList((prev) => [newPembeli, ...prev]);
-      setToastType('success');
       setToastMessage(`Pembeli "${pembeliData.nama}" berhasil didaftarkan`);
     }
 
@@ -106,7 +79,8 @@ export default function PembeliPage() {
   const handleConfirmDelete = () => {
     if (!confirmDeleteId) return;
     const target = pembeliList.find((p) => p.id === confirmDeleteId);
-    setPembeliList((prev) => prev.filter((item) => item.id !== confirmDeleteId));
+    Store.deletePembeli(confirmDeleteId);
+    setPembeliList(Store.getPembeli());
     setConfirmDeleteId(null);
     setToastType('success');
     setToastMessage(`Pembeli "${target?.nama || ''}" berhasil dihapus`);

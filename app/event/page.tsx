@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Plus, MapPin, Users, Edit3, Trash2, Ticket } from 'lucide-react';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -9,6 +9,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Toast } from '@/components/ui/Toast';
 import { EventFormModal } from '@/components/event/EventFormModal';
 import { EventItem } from '@/types/firestore';
+import { Store } from '@/lib/store';
 
 // Data contoh awal dari Skema Firestore Bab 3
 const INITIAL_MOCK_EVENTS: EventItem[] = [
@@ -51,6 +52,10 @@ export default function EventPage() {
     }).format(val);
   };
 
+  useEffect(() => {
+    setEvents(Store.getEvents());
+  }, []);
+
   // Handler Buka Form Tambah
   const handleOpenAdd = () => {
     setEditingEvent(null);
@@ -65,30 +70,13 @@ export default function EventPage() {
 
   // Handler Simpan (Create atau Update)
   const handleSaveEvent = (savedData: Omit<EventItem, 'id'> & { id?: string }) => {
+    const saved = Store.saveEvent(savedData);
+    setEvents(Store.getEvents());
+
     if (savedData.id) {
-      // Mode Edit: Update event yang ada
-      setEvents((prev) =>
-        prev.map((item) =>
-          item.id === savedData.id
-            ? { ...(item as EventItem), ...savedData }
-            : item
-        )
-      );
       setToastType('success');
       setToastMessage(`Data event "${savedData.nama}" berhasil diperbarui`);
     } else {
-      // Mode Tambah: Generate ID dokumen mock, tiket_terjual awal 0
-      const newId = 'Ev' + Math.random().toString(36).substring(2, 7);
-      const newEvent: EventItem = {
-        id: newId,
-        nama: savedData.nama,
-        tanggal: savedData.tanggal,
-        lokasi: savedData.lokasi,
-        harga_tiket: savedData.harga_tiket,
-        kuota: savedData.kuota,
-        tiket_terjual: 0, // Acceptance Criteria 1: tiket_terjual bernilai 0
-      };
-      setEvents((prev) => [newEvent, ...prev]);
       setToastType('success');
       setToastMessage(`Event "${savedData.nama}" berhasil disimpan`);
     }
@@ -101,7 +89,8 @@ export default function EventPage() {
   const handleConfirmDelete = () => {
     if (!confirmDeleteId) return;
     const target = events.find((e) => e.id === confirmDeleteId);
-    setEvents((prev) => prev.filter((item) => item.id !== confirmDeleteId));
+    Store.deleteEvent(confirmDeleteId);
+    setEvents(Store.getEvents());
     setConfirmDeleteId(null);
     setToastType('success');
     setToastMessage(`Event "${target?.nama || ''}" berhasil dihapus`);
