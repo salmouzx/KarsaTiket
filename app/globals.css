@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-foreground: #ffffff;
+  --accent: #f59e0b;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom utility animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
