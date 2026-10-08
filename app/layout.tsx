@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="id">
       <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased selection:bg-indigo-500 selection:text-white">
         <Navbar />
-        <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 pt-5 pb-24 md:pb-12">
+        <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 pt-6 pb-24 md:pb-12">
           {children}
         </main>
       </body>

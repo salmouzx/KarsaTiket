@@ -216,7 +216,7 @@ export default function TiketPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3.5">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               {filteredTiket.map((t) => {
                 const statusMeta = STATUS_LABELS[t.status];
 
